@@ -20,14 +20,14 @@ void _tmain()
 	HANDLE threadStatus;
 	while (1)
 	{
-		cout << "Loop in!\n";
+		//cout << "Loop in!\n";
 		NServer.Listen(MAX_CLIENTS);
 		NServer.Accept(client);
-		cout << "Accepted!\n";
+		//cout << "Accepted!\n";
 		SOCKET* connectedClient = new SOCKET();
 		*connectedClient = client.Detach();
 		threadStatus = CreateThread(NULL, 0, accessProcessing, connectedClient, 0, &threadID);
-		cout << "Thread Created!\n";
+		//cout << "Thread Created!\n";
 	}
 
 }

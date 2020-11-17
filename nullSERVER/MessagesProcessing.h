@@ -11,8 +11,24 @@
 #include <sstream>
 #include <codecvt>
 #define GMT_7 25200
+#define CSS_EXT ".css"
+#define JS_EXT ".js"
+#define HTML_EXT ".html"
+#define ICO_EXT ".ico"
+#define JPEG_EXT ".jpeg"
+#define JPG_EXT ".jpg"
+#define JPE_EXT ".jpe"
+#define PNG_EXT ".png"
 using namespace std;
 DWORD WINAPI accessProcessing(LPVOID lpParam); 
 string makeTextResponse(int length, string type);
-string getFileContent(string path);
+string makeImageResponse(int length, string type);
+string makeFileResponse(string type);
+string getTextFileContent(string path);
+string getBinaryFileContent(string path);
+string uriCutter(vector<char> buffer);
+string getRequestType(string uri);
+string fixedTime(string t);
+string makeDate();
+string toLowercase(string in);
 #endif

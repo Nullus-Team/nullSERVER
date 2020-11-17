@@ -1,5 +1,56 @@
+<!DOCTYPE html>
 <html>
-<body>
-<h1>Hello, World!</h1>
-</body>
+	<head>
+		<meta name="description" content="nullSERVER - FIT@HCMUS - Mang may tinh - 19CTT2">
+		<meta name="keywords" content="cngthnh">
+		<meta name="author" content="@cngthnh">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link rel="stylesheet" type="text/css" href="assets/css/P493.min.css">
+		<link rel="icon" href="/img/favicon.ico">
+		<script type="text/javascript" src="assets/js/scripts.js"></script>
+		<script src="assets/js/jquery-3.5.0.min.js"></script>
+		<title>nullSERVER</title>
+	</head>
+	<body>
+		<div class="login-container">
+			<form class="login-form" action="login.php" method="POST">
+				<div class="login-block logo-b">
+					<img src="img/nullSERVER_logo.png"></img>
+					<p>PROJECT: <b>nullSERVER</b></p>
+					<p>Login with your account</p>
+				</div>
+				<div class="login-block" id="user-tab">
+					<label>USERNAME</label> 
+						<br>
+					<input type="text" name="username" placeholder="Your username" onfocus="user_focus()" id="user-tbox" onfocusout="user_focusout()"> 
+						<br>
+				</div>
+				
+				<div class="login-block" id="pass-tab">
+					<label>CREDENTIALS</label> 
+						<br>
+					<input type="password" name="password" placeholder="Your password" id="pass-tbox" onfocus="pass_focus()" onfocusout="pass_focusout()">
+				</div>
+				<div class="login-block submit-b" id="remember-b">
+					<input type="checkbox" id="remember" name="remember" value="remember">
+					<label id="re">
+						Remember me!
+					</label>
+				</div>
+				<div class="login-block submit-b">
+					<input type="submit" id="submit-btn" value="Login">
+				</div>
+			</form>
+			<div class="notif">
+			<p id="error-u"></p>
+			<p id="error-p"></p>
+			</div>
+		</div>
+		<div class="bg-login">
+			<div class="color-mask">
+				<img src="img/ground.png"/>	
+			</div>
+		</div>
+		
+	</body>
 </html>
