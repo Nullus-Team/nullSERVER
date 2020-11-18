@@ -21,13 +21,11 @@
 #define PNG_EXT ".png"
 using namespace std;
 DWORD WINAPI accessProcessing(LPVOID lpParam); 
-string makeTextResponse(int length, string type);
-string makeImageResponse(int length, string type);
-string makeFileResponse(string type);
+string makeOKResponseHeader(int length, string type);
 string getTextFileContent(string path);
 string getBinaryFileContent(string path);
 string uriCutter(vector<char> buffer);
-string getRequestType(string uri);
+string getMIMEType(string uri);
 string fixedTime(string t);
 string makeDate();
 string toLowercase(string in);
