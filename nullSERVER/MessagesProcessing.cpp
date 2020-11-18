@@ -95,7 +95,15 @@ string makeOKResponseHeader(int length, string type)
 		"\nContent-Type: "+ type +"\nConnection: Closed\n\n";
 	return result;
 }
-
+string make404ResponseHeader(int length)
+{
+	string result, temp;
+	result = "HTTP/1.1 404 Not Found\nDate: ";
+	temp = makeDate();
+	result = result + temp + "Server: nullSERVER/0.0.1 (Win64)\nLast-Modified: " + temp + "Content-Length: " + to_string(length) +
+		"\nContent-Type: text/html" + "\nConnection: Closed\n\n";
+	return result;
+}
 string getTextFileContent(string path)
 {
 	ifstream f(path);
@@ -198,7 +206,10 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			string content = getTextFileContent(uri);
 			if (content == "\0")
 			{
-				//404
+				content = getTextFileContent(PATH_404);
+				string header = make404ResponseHeader(content.length());
+				client.Send(header.c_str(), header.length(), 0);
+				client.Send(content.c_str(), content.length(), 0);
 			}
 			else
 			{
@@ -212,7 +223,10 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			string content = getBinaryFileContent(uri);
 			if (content == "\0")
 			{
-				//404
+				content = getTextFileContent(PATH_404);
+				string header = make404ResponseHeader(content.length());
+				client.Send(header.c_str(), header.length(), 0);
+				client.Send(content.c_str(), content.length(), 0);
 			}
 			else
 			{
@@ -227,7 +241,10 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			string content = getTextFileContent(uri);
 			if (content == "\0")
 			{
-				//404
+				content = getTextFileContent(PATH_404);
+				string header = make404ResponseHeader(content.length());
+				client.Send(header.c_str(), header.length(), 0);
+				client.Send(content.c_str(), content.length(), 0);
 			}
 			else
 			{
