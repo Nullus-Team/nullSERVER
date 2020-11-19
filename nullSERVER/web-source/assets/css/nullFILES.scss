@@ -1,0 +1,90 @@
+@import "https://fonts.googleapis.com/css?family=Montserrat&display=swap";
+* {
+	font-family: Montserrat;
+}
+body {
+	padding: 0;
+	margin: 0;
+}
+.nav-wrapper {
+	display: grid;
+	grid-template-columns: auto minmax(50px, auto) 150px minmax(50px, auto) auto;
+	grid-template-rows: 100%;
+	background-color: #7d9eff;
+	grid-template-areas: 
+		"blank nav logo info blank";
+	height: 50px;
+	width: 100%;
+	box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.3);
+}
+.logo {
+	grid-area: 'logo';
+	height: 50px;
+}
+.side-blanks {
+	grid-area: 'blank';
+}
+.nav {
+	grid-area: 'nav';
+}
+.info {
+	grid-area: 'info';
+}
+.sticky {
+	position: fixed;
+	top: 0;
+	width: 100%;
+}
+.content {
+	margin-top: 80px;
+}
+.content-box {
+	width: 50%;
+	min-width: 350px;
+	background-color: #fafafa;
+	height: 150px;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 20px;
+	margin-bottom: 20px;
+	border-radius: 10px;
+	transition: box-shadow 0.3s ease-in-out, background-color 0.2s ease-in-out;
+	display: grid;
+	grid-template-columns: 120px auto;
+	grid-template-areas: "icon details";
+}
+.file-details {
+	grid-area: 'details';
+	margin-top: auto;
+	margin-bottom: auto;
+	margin-left: 10px;
+	margin-right: 30px;
+	display: block;
+  	a {
+  		font-size: 1.2em;
+  		font-weight: 700;
+  		color: #7d9eff;
+  		text-overflow: ellipsis;
+  		overflow: hidden;
+  		max-height: 2.4em;
+  		line-height: 1.2em;
+  		text-decoration: none;
+  	}
+  	h2 {
+  		font-size: 1em;
+  		font-weight: 400;
+  		color: rgb(50,50,50);
+  		text-overflow: ellipsis;
+  		overflow: hidden;
+  		max-height: 1.2em;
+  		line-height: 1.2em;
+  	}
+}
+.file-icon {
+	grid-area: 'icon';
+    margin: auto;
+    width: 80px;
+}
+.shadow {
+	box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.2);
+}
