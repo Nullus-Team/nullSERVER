@@ -9,7 +9,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
-#include <codecvt>
+#define CHUNK_SIZE 4096
 #define GMT_7 25200
 #define CSS_EXT ".css"
 #define JS_EXT ".js"
@@ -23,11 +23,13 @@
 using namespace std;
 DWORD WINAPI accessProcessing(LPVOID lpParam); 
 string makeOKResponseHeader(int length, string type);
-string getTextFileContent(string path);
 string getBinaryFileContent(string path);
 string uriCutter(vector<char> buffer);
 string getMIMEType(string uri);
 string fixedTime(string t);
 string makeDate();
 string toLowercase(string in);
+string getRequestMethod(vector<char> buffer);
+bool isDownload(vector<vector<string>> queryVars);
+string decToHex(int n);
 #endif

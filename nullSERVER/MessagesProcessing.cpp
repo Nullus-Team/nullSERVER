@@ -92,8 +92,62 @@ string makeOKResponseHeader(int length, string type)
 	result = "HTTP/1.1 200 OK\nDate: ";
 	temp = makeDate();
 	result = result + temp + "Server: nullSERVER/0.0.1 (Win64)\nLast-Modified: " + temp + "Content-Length: " + to_string(length) +
-		"\nContent-Type: "+ type +"\nConnection: Closed\n\n";
+		"\nContent-Type: "+ type +"\nConnection: Keep-Alive\n\n";
 	return result;
+}
+string makeChunkedOKResponseHeader(string type)
+{
+	string result, temp;
+	result = "HTTP/1.1 200 OK\nDate: ";
+	temp = makeDate();
+	result = result + temp + "Server: nullSERVER/0.0.1 (Win64)\nLast-Modified: " + temp + "Transfer-Encoding: chunked\nContent-Disposition: attachment" +
+		"\nContent-Type: " + type + "\nConnection: Keep-Alive\n\n";
+	return result;
+}
+vector<string> querySplitter(string query)
+{
+	vector<string> result;
+	string temp = "";
+	int i = 0;
+	for (i; i < query.length(); i++)
+	{
+		if (query[i] == '=')
+		{
+			i++;
+			break;
+		}
+		temp += query[i];
+	}
+	result.push_back(temp);
+	temp = "";
+	for (i; i < query.length(); i++)
+	{
+		temp += query[i];
+	}
+	result.push_back(temp);
+	return result;
+}
+vector<vector<string>> queryStringParser(string& uri)
+{
+	vector<vector<string>> GETvars;
+	string temp = "";
+	size_t breakpoint = 0;
+	for (int i = uri.length() - 1; i >= 0; i--)
+	{
+		if (uri[i] == '?' || uri[i] == '&')
+		{
+			GETvars.push_back(querySplitter(temp));
+			temp = "";
+			if (uri[i] == '?')
+			{
+				breakpoint = i;
+				break;
+			}
+		}
+		temp = uri[i] + temp;
+	}
+	if (breakpoint != 0) uri.erase(uri.begin() + breakpoint, uri.end());
+	return GETvars;
 }
 string make404ResponseHeader(int length)
 {
@@ -101,20 +155,8 @@ string make404ResponseHeader(int length)
 	result = "HTTP/1.1 404 Not Found\nDate: ";
 	temp = makeDate();
 	result = result + temp + "Server: nullSERVER/0.0.1 (Win64)\nLast-Modified: " + temp + "Content-Length: " + to_string(length) +
-		"\nContent-Type: text/html" + "\nConnection: Closed\n\n";
+		"\nContent-Type: text/html" + "\nConnection: Keep-Alive\n\n";
 	return result;
-}
-string getTextFileContent(string path)
-{
-	ifstream f(path);
-	if (f)
-	{
-		//f.imbue(locale(locale::empty(), new codecvt_utf8<wchar_t>));
-		ostringstream ss;
-		ss << f.rdbuf();
-		return ss.str();
-	}
-	else return "\0";
 }
 string getBinaryFileContent(string path)
 {
@@ -180,7 +222,35 @@ string uriCutter(vector<char> buffer)
 	}
 	return result;
 }
-
+bool isDownload(vector<vector<string>> queryVars)
+{
+	for (vector<vector<string>>::iterator i = queryVars.begin(); i < queryVars.end(); i++)
+	{
+		if ((*i)[0] == "download" && (*i)[1] == "1") return 1;
+	}
+	return 0;
+}
+string decToHex(int n)
+{
+	string hex;
+	int temp;
+	while (n != 0)
+	{
+		temp = n % 16;
+		if (temp < 10)
+		{
+			char t = temp + 48;
+			hex = t + hex;
+		}
+		else
+		{
+			char t = temp + 55;
+			hex = t + hex;
+		}
+		n = n / 16;
+	}
+	return hex;
+}
 DWORD WINAPI accessProcessing(LPVOID lpParam)
 {
 	CSocket client;
@@ -188,25 +258,54 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 	vector<char>buffer(MAX_BUFFER_LENGTH);
 	client.Receive(&buffer[0], MAX_BUFFER_LENGTH, 0);
 	//Requests from client
-	//for (vector<char>::iterator i = buffer.begin(); i < buffer.end(); i++) cout << *i;
-	//cout << "\n";
 	//URI cutter
 	string uri = uriCutter(buffer);
 	uri.erase(uri.begin()); // delete '/' at first place
 	uri = WEB_SOURCE_PATH + uri;
 	//Routing
 	//HTML indexes
+	vector<vector<string>> queryVars = queryStringParser(uri);
 	string rtype = getMIMEType(uri);
 	string rmethod = getRequestMethod(buffer);
 	if (rmethod == "GET")
 	{
 		cout << rtype << " " << uri << "\n";
-		if (rtype == "text/css" || rtype == "text/html" || rtype == "text/javascript") //HTML/CSS/JS
+		if (isDownload(queryVars))
 		{
-			string content = getTextFileContent(uri);
+			string content = getBinaryFileContent(uri); // get content
+			string header = makeChunkedOKResponseHeader(rtype); // make header
+			client.Send(header.c_str(), header.length(), 0); //send header
+			string temp, separator = "\r\n", sizeSeparator; 
+			//divide content into equal parts, length=CHUNK_SIZE
+			for (int i = 0; i < content.length(); i++)
+			{
+				if (i % CHUNK_SIZE == 0 && i != 0)
+				{
+					sizeSeparator = decToHex(temp.length()) + "\r\n";
+					client.Send(sizeSeparator.c_str(), sizeSeparator.length(), 0); //send chunk size
+					client.Send(temp.c_str(), temp.length(), 0); //send chunk content
+					client.Send(separator.c_str(), separator.length(), 0); //send end chunk
+					temp = "";
+				}
+				temp += content[i];
+			}
+			if (temp.length() != 0)
+			{
+				sizeSeparator = decToHex(temp.length()) + "\r\n";
+				client.Send(sizeSeparator.c_str(), sizeSeparator.length(), 0); //send chunk size
+				client.Send(temp.c_str(), temp.length(), 0); //send chunk content
+				client.Send(separator.c_str(), separator.length(), 0); //send end chunk
+			}
+			temp = "0\r\n\r\n"; //stop sending chunks
+			client.Send(temp.c_str(), temp.length(), 0);
+			//do download
+		} 
+		else if (rtype == "text/css" || rtype == "text/html" || rtype == "text/javascript") //HTML/CSS/JS
+		{
+			string content = getBinaryFileContent(uri);
 			if (content == "\0")
 			{
-				content = getTextFileContent(PATH_404);
+				content = getBinaryFileContent(PATH_404);
 				string header = make404ResponseHeader(content.length());
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
@@ -223,7 +322,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			string content = getBinaryFileContent(uri);
 			if (content == "\0")
 			{
-				content = getTextFileContent(PATH_404);
+				content = getBinaryFileContent(PATH_404);
 				string header = make404ResponseHeader(content.length());
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
@@ -238,10 +337,10 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 		else if (rtype == "folder")
 		{
 			uri = uri + "/index.html";
-			string content = getTextFileContent(uri);
+			string content = getBinaryFileContent(uri);
 			if (content == "\0")
 			{
-				content = getTextFileContent(PATH_404);
+				content = getBinaryFileContent(PATH_404);
 				string header = make404ResponseHeader(content.length());
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
