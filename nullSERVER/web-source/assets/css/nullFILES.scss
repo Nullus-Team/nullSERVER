@@ -53,6 +53,7 @@ body {
 	grid-template-columns: 120px auto;
 	grid-template-areas: "icon details";
 }
+
 .file-details {
 	grid-area: 'details';
 	margin-top: auto;
@@ -61,14 +62,15 @@ body {
 	margin-right: 30px;
 	display: block;
   	a {
+		display: block;
   		font-size: 1.2em;
   		font-weight: 700;
   		color: #7d9eff;
-  		text-overflow: ellipsis;
   		overflow: hidden;
+		line-height: 1.2em;
   		max-height: 2.4em;
-  		line-height: 1.2em;
   		text-decoration: none;
+		text-overflow: ellipsis;
   	}
   	h2 {
   		font-size: 1em;

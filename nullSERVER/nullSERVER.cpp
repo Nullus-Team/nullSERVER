@@ -2,6 +2,7 @@
 #include "framework.h"
 #include "NullServer.h"
 #include "MessagesProcessing.h"
+#include "Routing.h"
 void _tmain()
 {
 	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))

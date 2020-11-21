@@ -21,7 +21,6 @@
 #define PNG_EXT ".png"
 #define PATH_404 "web-source/404.html"
 using namespace std;
-DWORD WINAPI accessProcessing(LPVOID lpParam); 
 string makeOKResponseHeader(int length, string type);
 string getBinaryFileContent(string path);
 string uriCutter(vector<char> buffer);
@@ -32,4 +31,7 @@ string toLowercase(string in);
 string getRequestMethod(vector<char> buffer);
 bool isDownload(vector<vector<string>> queryVars);
 string decToHex(size_t n);
+vector<vector<string>> queryStringParser(string& uri);
+string makeChunkedOKResponseHeader(string type);
+string make404ResponseHeader(int length);
 #endif

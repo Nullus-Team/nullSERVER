@@ -10,7 +10,7 @@ function user_focusout()
 	document.getElementById("user-tbox").style.backgroundColor="#FFFFFF";
 	if (document.getElementById("user-tbox").value.length==0) 
 	{
-		document.getElementById("error-u").innerHTML = "You did not enter username";
+		document.getElementById("error-u").innerHTML = "Bạn chưa nhập tên tài khoản";
 		document.getElementById("user-tab").style.backgroundColor="#FFCECF";
 		document.getElementById("user-tbox").style.backgroundColor="#FFCECF";
 	}
@@ -29,7 +29,7 @@ function pass_focusout()
 	document.getElementById("pass-tbox").style.backgroundColor="#FFFFFF";
 	if (document.getElementById("pass-tbox").value.length==0) 
 	{
-		document.getElementById("error-p").innerHTML = "You did not enter password";
+		document.getElementById("error-p").innerHTML = "Bạn chưa nhập mật khẩu";
 		document.getElementById("pass-tab").style.backgroundColor="#FFCECF";
 		document.getElementById("pass-tbox").style.backgroundColor="#FFCECF";
 	}
