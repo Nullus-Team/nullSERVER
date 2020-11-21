@@ -31,5 +31,5 @@ string makeDate();
 string toLowercase(string in);
 string getRequestMethod(vector<char> buffer);
 bool isDownload(vector<vector<string>> queryVars);
-string decToHex(int n);
+string decToHex(size_t n);
 #endif

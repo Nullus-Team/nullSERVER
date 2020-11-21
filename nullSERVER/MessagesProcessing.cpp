@@ -166,6 +166,7 @@ string getBinaryFileContent(string path)
 		//f.imbue(locale(locale::empty(), new codecvt_utf8<wchar_t>));
 		ostringstream ss;
 		ss << f.rdbuf();
+		f.close();
 		return ss.str();
 	}
 	else return "\0";
@@ -230,10 +231,10 @@ bool isDownload(vector<vector<string>> queryVars)
 	}
 	return 0;
 }
-string decToHex(int n)
+string decToHex(size_t n)
 {
 	string hex;
-	int temp;
+	size_t temp;
 	while (n != 0)
 	{
 		temp = n % 16;
@@ -272,52 +273,45 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 		cout << rtype << " " << uri << "\n";
 		if (isDownload(queryVars))
 		{
-			string content = getBinaryFileContent(uri); // get content
-			string header = makeChunkedOKResponseHeader(rtype); // make header
+			string separator = "\r\n", sizeSeparator;
+			string header = makeChunkedOKResponseHeader(rtype);
 			client.Send(header.c_str(), header.length(), 0); //send header
-			string temp, separator = "\r\n", sizeSeparator; 
-			//divide content into equal parts, length=CHUNK_SIZE
-			for (int i = 0; i < content.length(); i++)
+			ifstream fi(uri, ios::binary);
+			fi.seekg(0, fi.end);
+			unsigned long long int fileSize = fi.tellg(); //get File Size
+			fi.seekg(0, fi.beg);
+			vector<char> content(CHUNK_SIZE);
+			for (int i = 0; i < fileSize / CHUNK_SIZE; i++)
 			{
-				if (i % CHUNK_SIZE == 0 && i != 0)
+				if (!fi.read(content.data(), CHUNK_SIZE))
 				{
-					sizeSeparator = decToHex(temp.length()) + "\r\n";
-					client.Send(sizeSeparator.c_str(), sizeSeparator.length(), 0); //send chunk size
-					client.Send(temp.c_str(), temp.length(), 0); //send chunk content
-					client.Send(separator.c_str(), separator.length(), 0); //send end chunk
-					temp = "";
+					cout << "Can't read file!\n";
+					break;
 				}
-				temp += content[i];
-			}
-			if (temp.length() != 0)
-			{
-				sizeSeparator = decToHex(temp.length()) + "\r\n";
+				cout << content.size() << endl;
+				sizeSeparator = decToHex(content.size()) + "\r\n";
 				client.Send(sizeSeparator.c_str(), sizeSeparator.length(), 0); //send chunk size
-				client.Send(temp.c_str(), temp.length(), 0); //send chunk content
+				client.Send(&content[0], content.size(), 0); //send chunk content
 				client.Send(separator.c_str(), separator.length(), 0); //send end chunk
 			}
-			temp = "0\r\n\r\n"; //stop sending chunks
-			client.Send(temp.c_str(), temp.length(), 0);
-			//do download
-		} 
-		else if (rtype == "text/css" || rtype == "text/html" || rtype == "text/javascript") //HTML/CSS/JS
-		{
-			string content = getBinaryFileContent(uri);
-			if (content == "\0")
+			if (fileSize % CHUNK_SIZE != 0)
 			{
-				content = getBinaryFileContent(PATH_404);
-				string header = make404ResponseHeader(content.length());
-				client.Send(header.c_str(), header.length(), 0);
-				client.Send(content.c_str(), content.length(), 0);
+				content.resize(fileSize % CHUNK_SIZE); //resize vector to fit remaining part
+				if (!fi.read(content.data(), fileSize%CHUNK_SIZE))
+				{
+					cout << "Can't read file!\n";
+					return 0;
+				}
+				cout << content.size() <<"cc"<< endl;
+				sizeSeparator = decToHex(content.size()) + "\r\n";
+				client.Send(sizeSeparator.c_str(), sizeSeparator.length(), 0); //send chunk size
+				client.Send(&content[0], content.size(), 0); //send chunk content
+				client.Send(separator.c_str(), separator.length(), 0); //send end chunk
 			}
-			else
-			{
-				string header = makeOKResponseHeader(content.length(), rtype);
-				client.Send(header.c_str(), header.length(), 0);
-				client.Send(content.c_str(), content.length(), 0);
-			}
+			separator = "0\r\n\r\n";
+			client.Send(separator.c_str(), separator.length(), 0);
 		}
-		else if (rtype == "image/jpeg" || rtype == "image/png" || rtype == "image/icon-x") //Image
+		else if (rtype != "folder") //HTML/CSS/JS //images
 		{
 			string content = getBinaryFileContent(uri);
 			if (content == "\0")
