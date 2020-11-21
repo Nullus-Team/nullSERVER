@@ -19,7 +19,6 @@
 #define JPG_EXT ".jpg"
 #define JPE_EXT ".jpe"
 #define PNG_EXT ".png"
-#define PATH_404 "web-source/404.html"
 using namespace std;
 string makeOKResponseHeader(int length, string type);
 string getBinaryFileContent(string path);

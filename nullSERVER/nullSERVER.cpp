@@ -15,8 +15,10 @@ void _tmain()
 		_tprintf(_T("Fatal Error: Can't init socket\n"));
 		return;
 	}
+	cout << "nullSERVER/0.0.1\n\nWritten by @cngthnh and @tiendat101001\nFIT@HCMUS - 19CTT2 - Computer Network\n\n";
 	CSocket NServer, client;
 	NServer.Create(PORT);
+	cout << "Server started on port " << PORT << "\n";
 	DWORD threadID;
 	HANDLE threadStatus;
 	while (1)

@@ -70,9 +70,12 @@ void addFiles(string& content)
 	content.erase(0, marked + code.length());
 	for (vector<string>::iterator i = files.begin(); i < files.end(); i++)
 	{
+		string imgPath = extCutter(*i);
+		if (!filesystem::exists(ICON_PATH + imgPath + ".png")) imgPath = "unknown.png"; else imgPath += ".png";
 		string path = (*i).substr(strlen(WEB_SOURCE_PATH));
-		string newFile = "\t\t\t<div class=\"content-box\">\n\t\t\t\t<img class=\"file-icon\" src=\"/img/icon/" + extCutter(*i) +
-			".png\">\n\t\t\t\t<div class=\"file-details\">\n\t\t\t\t\t<a href=\"" + path + "\">" + filenameCutter(*i) + "</a>\n\t\t\t\t\t<h2>Size: " + filesizeDecor(std::filesystem::file_size(*i)) + "</h2>\n\t\t\t\t</div>\n\t\t\t</div>\n";
+		string newFile = "\t\t\t<div class=\"content-box\">\n\t\t\t\t<img class=\"file-icon\" src=\"/img/icon/" + imgPath +
+			"\">\n\t\t\t\t<div class=\"file-details\">\n\t\t\t\t\t<a href=\"" + path + "\">" + filenameCutter(*i) + "</a>\n\t\t\t\t\t<h2>Size: " + 
+			filesizeDecor(std::filesystem::file_size(*i)) + "</h2>\n\t\t\t\t</div>\n\t\t\t</div>\n";
 		first_part += newFile;
 	}
 	content = first_part + content;
