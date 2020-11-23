@@ -3,7 +3,8 @@
 vector<string> getDownloadable()
 {
 	vector<string> result;
-	std::string path = "web-source/files/";
+	if (!filesystem::exists(DOWNLOADABLE_FILES_PATH)) std::filesystem::create_directory(DOWNLOADABLE_FILES_PATH);
+	std::string path = DOWNLOADABLE_FILES_PATH;
 	for (const auto& entry : std::filesystem::directory_iterator(path))
 		result.push_back(entry.path().u8string());
 	return result;
@@ -67,6 +68,7 @@ void addFiles(string& content)
 	size_t marked = content.find(code); //marked code for adding files into
 	vector<string> files = getDownloadable();
 	string first_part = content.substr(0, marked);
+	if (files.empty()) first_part += "<h1 style=\"text-align: center; color: #5153ff;\">Empty!</h1>\n";
 	content.erase(0, marked + code.length());
 	for (vector<string>::iterator i = files.begin(); i < files.end(); i++)
 	{
@@ -74,7 +76,7 @@ void addFiles(string& content)
 		if (!filesystem::exists(ICON_PATH + imgPath + ".png")) imgPath = "unknown.png"; else imgPath += ".png";
 		string path = (*i).substr(strlen(WEB_SOURCE_PATH));
 		string newFile = "\t\t\t<div class=\"content-box\">\n\t\t\t\t<img class=\"file-icon\" src=\"/img/icon/" + imgPath +
-			"\">\n\t\t\t\t<div class=\"file-details\">\n\t\t\t\t\t<a href=\"" + path + "\">" + filenameCutter(*i) + "</a>\n\t\t\t\t\t<h2>Size: " + 
+			"\">\n\t\t\t\t<div class=\"file-details\">\n\t\t\t\t\t<a href=\"" + path + "?download=1\">" + filenameCutter(*i) + "</a>\n\t\t\t\t\t<h2>Size: " + 
 			filesizeDecor(std::filesystem::file_size(*i)) + "</h2>\n\t\t\t\t</div>\n\t\t\t</div>\n";
 		first_part += newFile;
 	}

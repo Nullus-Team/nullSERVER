@@ -8,9 +8,9 @@ body {
 }
 .nav-wrapper {
 	display: grid;
-	grid-template-columns: auto minmax(50px, auto) 150px minmax(50px, auto) auto;
+	grid-template-columns: auto 100px auto 100px auto;
 	grid-template-rows: 100%;
-	background-color: #7d9eff;
+	background-color: #5153ff;
 	grid-template-areas: 
 		"blank nav logo info blank";
 	height: 50px;
@@ -26,6 +26,11 @@ body {
 }
 .nav {
 	grid-area: 'nav';
+	a {
+		color: white; 
+		text-decoration: none;
+		padding-left: 10px;
+	}
 }
 .info {
 	grid-area: 'info';
@@ -53,7 +58,13 @@ body {
 	grid-template-columns: 120px auto;
 	grid-template-areas: "icon details";
 }
-
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
 .file-details {
 	grid-area: 'details';
 	margin-top: auto;
