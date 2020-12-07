@@ -32,5 +32,4 @@ void _tmain()
 		threadStatus = CreateThread(NULL, 0, accessProcessing, connectedClient, 0, &threadID);
 		//cout << "Thread Created!\n";
 	}
-
 }

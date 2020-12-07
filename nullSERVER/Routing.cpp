@@ -92,12 +92,48 @@ void uriDecor(string& uri)
 		found = uri.find("%20");
 	}
 }
+string ifModifiedHeaderStringTime(vector<char> buffer)
+{
+	string header = "If-Modified-Since: ", result = "", sep = "\r\n";
+	vector<char>::iterator found = search(buffer.begin(), buffer.end(), header.begin(), header.end(), [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
+	if (found == buffer.end()) return "";
+	vector<char>::iterator seperator = search(found, buffer.end(), sep.begin(), sep.end());
+	for (vector<char>::iterator i = found + header.length(); i < seperator; i++)
+	{
+		result += *i;
+	}
+	return result;
+}
+bool modifiedFile(string uri, string cacheTime)
+{
+	time_t cache, modified;
+	tm tmCache;
+	tm tmModified = getFileModifiedDate(uri);
+	modified = mktime(&tmModified);
+	std::istringstream ss(cacheTime);
+	ss >> std::get_time(&tmCache, TIME_STAMP);
+	cache = mktime(&tmCache);
+	if (difftime(cache, modified) > 0.0) return 1;
+	return 0;
+}
+void cleanBuffer(vector<char>buffer)
+{
+	int count = 0;
+	for (vector<char>::iterator i = buffer.begin(); i < buffer.end(); i++)
+	{
+		if (*i == '\0') break;
+		count++;
+	}
+	buffer.resize(count);
+}
 DWORD WINAPI accessProcessing(LPVOID lpParam)
 {
 	CSocket client;
 	client.Attach(*(SOCKET*)lpParam);
-	vector<char>buffer(MAX_BUFFER_LENGTH);
+	vector<char> buffer(MAX_BUFFER_LENGTH);
 	client.Receive(&buffer[0], MAX_BUFFER_LENGTH, 0);
+	cleanBuffer(buffer);
+	string rmethod = getRequestMethod(buffer);
 	//Requests from client
 	//URI cutter
 	string uri = uriCutter(buffer);
@@ -108,7 +144,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 	//HTML indexes
 	vector<vector<string>> queryVars = queryStringParser(uri);
 	string rtype = getMIMEType(uri);
-	string rmethod = getRequestMethod(buffer);
+	string cached = ifModifiedHeaderStringTime(buffer);
 	if (rmethod == "GET")
 	{
 		//cout << rtype << " " << uri << "\n";
@@ -118,14 +154,14 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			if (content == "\0")
 			{
 				content = getBinaryFileContent(PATH_404);
-				string header = makeOKResponseHeader(content.length(), "text/html");
+				string header = makeOKResponseHeader(content.length(), "text/html", uri);
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
 			}
 			else
 			{
 				addFiles(content);
-				string header = makeOKResponseHeader(content.length(), rtype);
+				string header = makeOKResponseHeader(content.length(), rtype, uri);
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
 			}
@@ -133,7 +169,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 		if (isDownload(queryVars))
 		{
 			string separator = "\r\n", sizeSeparator;
-			string header = makeChunkedOKResponseHeader(rtype);
+			string header = makeChunkedOKResponseHeader(rtype, uri);
 			client.Send(header.c_str(), header.length(), 0); //send header
 			ifstream fi(uri, ios::binary);
 			fi.seekg(0, fi.end);
@@ -187,17 +223,34 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 				}
 				else //if it isn't a folder then return 404
 				{
-					string header = makeOKResponseHeader(content.length(), "text/html");
-					client.Send(header.c_str(), header.length(), 0);
-					client.Send(content.c_str(), content.length(), 0);
+					if (cached != "" && !modifiedFile(uri, cached))
+					{
+						string header = make304ResponseHeader(uri);
+						client.Send(header.c_str(), header.length(), 0);
+					}
+					else
+					{
+						string header = makeOKResponseHeader(content.length(), "text/html", uri);
+						client.Send(header.c_str(), header.length(), 0);
+						client.Send(content.c_str(), content.length(), 0);
+					}
 				}
 			}
 			else
 			{
-				string header = makeOKResponseHeader(content.length(), rtype);
-				client.Send(header.c_str(), header.length(), 0);
-				client.Send(content.c_str(), content.length(), 0);
+				if (cached != "" && !modifiedFile(uri, cached))
+				{
+					string header = make304ResponseHeader(uri);
+					client.Send(header.c_str(), header.length(), 0);
+				}
+				else
+				{
+					string header = makeOKResponseHeader(content.length(), rtype, uri);
+					client.Send(header.c_str(), header.length(), 0);
+					client.Send(content.c_str(), content.length(), 0);
+				}
 			}
+
 		}
 	}
 	return 0;
