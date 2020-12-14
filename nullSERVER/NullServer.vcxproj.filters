@@ -36,6 +36,9 @@
     <ClInclude Include="Routing.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Md5.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="nullSERVER.cpp">
@@ -48,6 +51,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Routing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Md5.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

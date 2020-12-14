@@ -1,54 +1,55 @@
-@import "https://fonts.googleapis.com/css?family=Montserrat&display=swap";
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;900&display=swap');
 * {
-	font-family: Montserrat;
+	font-family: Montserrat, san-serif;
 }
 body {
 	padding: 0;
 	margin: 0;
-	background-color: #fafafa;
+	background-color: #f8f9fa;
 }
 .nav-wrapper {
 	display: grid;
-	grid-template-columns: auto 100px auto 100px auto;
+	grid-template-columns: auto auto auto;
 	grid-template-rows: 100%;
-	background-color: #5a5cff;
+	background-color: #ffffff;
 	grid-template-areas: 
-		"blank nav logo info blank";
+		"blank nav nav nav blank";
 	height: 50px;
 	width: 100%;
-	box-shadow: 0 5px 8px 0 rgba(0, 0, 0, 0.2);
-}
-.logo {
-	grid-area: 'logo';
-	height: 50px;
-}
-.side-blanks {
-	grid-area: 'blank';
+	box-shadow: 0 -5px 8px 0 rgba(0, 0, 0, 0.1);
 }
 .nav {
 	grid-area: 'nav';
 	a {
-		color: white; 
+		color: #5a5cff; 
 		text-decoration: none;
 		padding-left: 10px;
+		margin-left: 10px;
+		margin-right: 10px;
 	}
+	margin-left:auto;
+	margin-right:auto;
 }
-.info {
-	grid-area: 'info';
-	text-align: right;
-	a {
-		color: white; 
-		text-decoration: none;
-		padding-left: 10px;
-	}
+.side-blanks {
+	grid-area: 'blank';
 }
+
 .sticky {
 	position: fixed;
-	top: 0;
+	bottom: 0;
 	width: 100%;
 }
 .content {
-	margin-top: 80px;
+	h1 {
+		width: 50%;
+		min-width: 350px;
+		margin-left: auto;
+		margin-right: auto;
+		margin-top: 10%;
+		font-weight: 900 !important;
+		font-size: 250%;
+		color: #5a5cff;
+	}
 }
 .content-box {
 	width: 50%;
@@ -83,7 +84,7 @@ body {
 		display: block;
   		font-size: 1.2em;
   		font-weight: 700;
-  		color: #5a5cff;
+  		color: #6a6cff;
   		overflow: hidden;
 		line-height: 1.2em;
   		max-height: 2.4em;

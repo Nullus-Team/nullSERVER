@@ -2,7 +2,7 @@ function user_focus()
 {
 	document.getElementById("user-tab").style.backgroundColor="#E6E6E6";
 	document.getElementById("user-tbox").style.backgroundColor="#E6E6E6";
-	if (document.getElementById("wrong-pass").innerHTML!="") $("#wrong-pass").remove();
+	document.getElementById("error-u").innerHTML = "";
 }
 function user_focusout()
 {
@@ -21,7 +21,7 @@ function pass_focus()
 {
 	document.getElementById("pass-tab").style.backgroundColor="#E6E6E6";
 	document.getElementById("pass-tbox").style.backgroundColor="#E6E6E6";
-	if (document.getElementById("wrong-pass").innerHTML!="") $("#wrong-pass").remove();
+	document.getElementById("error-p").innerHTML = "";
 }
 function pass_focusout()
 {
@@ -47,7 +47,7 @@ $(document).ready(function(){
 	  }
 	);
 	$(".content-box").mouseup(function(){
-	  $(this).css("background-color", "#fafafa");
+	  $(this).css("background-color", "#ffffff");
 	  }
 	);
 });

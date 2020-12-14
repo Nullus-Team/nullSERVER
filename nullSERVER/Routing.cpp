@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "Routing.h"
+#include "Md5.h"
 vector<string> getDownloadable()
 {
 	vector<string> result;
@@ -92,45 +93,44 @@ void uriDecor(string& uri)
 		found = uri.find("%20");
 	}
 }
-string ifModifiedHeaderStringTime(vector<char> buffer)
+bool isSession(vector<vector<string>> POSTvars)
 {
-	string header = "If-Modified-Since: ", result = "", sep = "\r\n";
-	vector<char>::iterator found = search(buffer.begin(), buffer.end(), header.begin(), header.end(), [](char ch1, char ch2) { return std::toupper(ch1) == std::toupper(ch2); });
-	if (found == buffer.end()) return "";
-	vector<char>::iterator seperator = search(found, buffer.end(), sep.begin(), sep.end());
-	for (vector<char>::iterator i = found + header.length(); i < seperator; i++)
+	for (vector<vector<string>>::iterator i = POSTvars.begin(); i < POSTvars.end(); i++)
 	{
-		result += *i;
+		if ((*i)[0] == "remember" && (*i)[1] == "remember") return 0;
 	}
-	return result;
+	return 1;
 }
-bool modifiedFile(string uri, string cacheTime)
+bool accountChecker(vector<vector<string>> POSTvars)
 {
-	time_t cache, modified;
-	tm tmCache;
-	tm tmModified = getFileModifiedDate(uri);
-	modified = mktime(&tmModified);
-	std::istringstream ss(cacheTime);
-	ss >> std::get_time(&tmCache, TIME_STAMP);
-	cache = mktime(&tmCache);
-	if (difftime(cache, modified) > 0.0) return 1;
+	bool a = false, b = false;
+	for (vector<vector<string>>::iterator i = POSTvars.begin(); i < POSTvars.end(); i++)
+	{
+		if ((*i)[0] == USERNAME_FIELD_NAME && (*i)[1] == USERNAME) a = true;
+		if ((*i)[0] == PASSWORD_FIELD_NAME && (*i)[1] == PASSWORD) b = true;
+	}
+	if (a && b) return 1;
 	return 0;
 }
-void cleanBuffer(vector<char>buffer)
+string removeCookie()
 {
-	int count = 0;
-	for (vector<char>::iterator i = buffer.begin(); i < buffer.end(); i++)
-	{
-		if (*i == '\0') break;
-		count++;
-	}
-	buffer.resize(count);
+	string expDate = makeDate(-ONEDAY_SEC);
+	string result;
+	result += "Set-Cookie: id=null; Path=/";
+	result += "; Expires=";
+	result += expDate;
+	result += "; HttpOnly\r\n";
+	result += "Set-Cookie: hash=null; Path=/";
+	result += "; Expires=";
+	result += expDate;
+	result += "; HttpOnly\r\n";
+	return result;
 }
 DWORD WINAPI accessProcessing(LPVOID lpParam)
 {
 	CSocket client;
 	client.Attach(*(SOCKET*)lpParam);
-	vector<char> buffer(MAX_BUFFER_LENGTH);
+	vector<char>buffer(MAX_BUFFER_LENGTH);
 	client.Receive(&buffer[0], MAX_BUFFER_LENGTH, 0);
 	cleanBuffer(buffer);
 	string rmethod = getRequestMethod(buffer);
@@ -144,30 +144,50 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 	//HTML indexes
 	vector<vector<string>> queryVars = queryStringParser(uri);
 	string rtype = getMIMEType(uri);
-	string cached = ifModifiedHeaderStringTime(buffer);
+	string cached = getHeaderValue(buffer, IF_MODIFIED_HEADER);
 	if (rmethod == "GET")
 	{
-		//cout << rtype << " " << uri << "\n";
+		if (uri == SIGNOUT)
+		{
+			string header = make303ResponseHeader(LOGIN_PATH_PUBLIC, removeCookie());
+			client.Send(header.c_str(), header.length(), 0);
+			return 0;
+		} 
+		else
 		if (uri == FILE_MANAGER_PATH)
 		{
+			if (!cookieHashCheck(cookieSplitter(getHeaderValue(buffer, COOKIE_HEADER))))
+			{
+				string header = make303ResponseHeader(LOGIN_PATH_PUBLIC, "");
+				client.Send(header.c_str(), header.length(), 0);
+				return 0;
+			}
 			string content = getBinaryFileContent(uri);
 			if (content == "\0")
 			{
 				content = getBinaryFileContent(PATH_404);
-				string header = makeOKResponseHeader(content.length(), "text/html", uri);
+				string header = makeOKResponseHeader(content.length(), HTML_MIME, uri);
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
 			}
 			else
 			{
 				addFiles(content);
-				string header = makeOKResponseHeader(content.length(), rtype, uri);
+				//no cache because this content is automatically made at the time requests come.
+				string header = makeOKResponseHeader(content.length(), rtype, uri, 1);
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
 			}
 		}
+		else
 		if (isDownload(queryVars))
 		{
+			if (!cookieHashCheck(cookieSplitter(getHeaderValue(buffer, COOKIE_HEADER))))
+			{
+				string header = make303ResponseHeader(LOGIN_PATH_PUBLIC, "");
+				client.Send(header.c_str(), header.length(), 0);
+				return 0;
+			}
 			string separator = "\r\n", sizeSeparator;
 			string header = makeChunkedOKResponseHeader(rtype, uri);
 			client.Send(header.c_str(), header.length(), 0); //send header
@@ -183,7 +203,6 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 					cout << "Can't read file!\n";
 					break;
 				}
-				cout << content.size() << endl;
 				sizeSeparator = decToHex(content.size()) + "\r\n";
 				client.Send(sizeSeparator.c_str(), sizeSeparator.length(), 0); //send chunk size
 				client.Send(&content[0], content.size(), 0); //send chunk content
@@ -208,6 +227,24 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 		}
 		else //HTML/CSS/JS //images
 		{
+			if (uri == LOGIN_PATH || uri == WEB_SOURCE_PATH)
+			{
+				if (cookieHashCheck(cookieSplitter(getHeaderValue(buffer, COOKIE_HEADER))))
+				{
+					string header = make303ResponseHeader(INFO_PATH_PUBLIC, "");
+					client.Send(header.c_str(), header.length(), 0);
+					return 0;
+				}
+			}
+			if (uri == INFO_PATH)
+			{
+				if (!cookieHashCheck(cookieSplitter(getHeaderValue(buffer, COOKIE_HEADER))))
+				{
+					string header = make303ResponseHeader(LOGIN_PATH_PUBLIC, "");
+					client.Send(header.c_str(), header.length(), 0);
+					return 0;
+				}
+			}
 			string content = getBinaryFileContent(uri);
 			if (content == "\0")
 			{
@@ -230,7 +267,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 					}
 					else
 					{
-						string header = makeOKResponseHeader(content.length(), "text/html", uri);
+						string header = makeOKResponseHeader(content.length(), HTML_MIME, uri);
 						client.Send(header.c_str(), header.length(), 0);
 						client.Send(content.c_str(), content.length(), 0);
 					}
@@ -240,6 +277,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			{
 				if (cached != "" && !modifiedFile(uri, cached))
 				{
+					cout << cached << '\n';
 					string header = make304ResponseHeader(uri);
 					client.Send(header.c_str(), header.length(), 0);
 				}
@@ -251,6 +289,22 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 				}
 			}
 
+		}
+	}
+	if (rmethod == "POST") 
+	{
+		vector<vector<string>>pvars;
+		string content = getBinaryFileContent(uri);
+		//get account
+		pvars = getPOSTVar(buffer);
+		//check account -> redirect
+		if (accountChecker(pvars)) { 
+			string header = make303ResponseHeader(INFO_PATH_PUBLIC, setCookieString(pvars, isSession(pvars)));
+			client.Send(header.c_str(), header.length(), 0);
+		}
+		else {
+			string header = make303ResponseHeader(PATH_404_PUBLIC, "");
+			client.Send(header.c_str(), header.length(), 0);
 		}
 	}
 	return 0;

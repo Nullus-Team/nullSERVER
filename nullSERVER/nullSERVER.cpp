@@ -15,7 +15,7 @@ void _tmain()
 		_tprintf(_T("Fatal Error: Can't init socket\n"));
 		return;
 	}
-	cout << "nullSERVER/0.0.1\n\nWritten by @cngthnh and @tiendat101001\nFIT@HCMUS - 19CTT2 - Computer Network\n\n";
+	cout << SERVER_INFO << "\n\nWritten by @cngthnh and @tiendat101001\nFIT@HCMUS - 19CTT2 - Computer Network\n\n";
 	CSocket NServer, client;
 	NServer.Create(PORT);
 	cout << "Server started on port " << PORT << "\n";
@@ -24,7 +24,7 @@ void _tmain()
 	while (1)
 	{
 		//cout << "Loop in!\n";
-		NServer.Listen(MAX_CLIENTS);
+		NServer.Listen(BACKLOG);
 		NServer.Accept(client);
 		//cout << "Accepted!\n";
 		SOCKET* connectedClient = new SOCKET();
