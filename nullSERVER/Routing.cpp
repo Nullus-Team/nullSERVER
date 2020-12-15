@@ -166,7 +166,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			if (content == "\0")
 			{
 				content = getBinaryFileContent(PATH_404);
-				string header = makeOKResponseHeader(content.length(), HTML_MIME, uri);
+				string header = make404ResponseHeader(content.length());
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
 			}
@@ -174,7 +174,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			{
 				addFiles(content);
 				//no cache because this content is automatically made at the time requests come.
-				string header = makeOKResponseHeader(content.length(), rtype, uri, 1);
+				string header = makeOKResponseHeader(content.length(), rtype, uri, NO_STORE);
 				client.Send(header.c_str(), header.length(), 0);
 				client.Send(content.c_str(), content.length(), 0);
 			}
@@ -227,8 +227,10 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 		}
 		else //HTML/CSS/JS //images
 		{
+			int cacheControl = DEFAULT_CACHE;
 			if (uri == LOGIN_PATH || uri == WEB_SOURCE_PATH)
 			{
+				cacheControl = NO_STORE;
 				if (cookieHashCheck(cookieSplitter(getHeaderValue(buffer, COOKIE_HEADER))))
 				{
 					string header = make303ResponseHeader(INFO_PATH_PUBLIC, "");
@@ -238,6 +240,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			}
 			if (uri == INFO_PATH)
 			{
+				cacheControl = NO_CACHE;
 				if (!cookieHashCheck(cookieSplitter(getHeaderValue(buffer, COOKIE_HEADER))))
 				{
 					string header = make303ResponseHeader(LOGIN_PATH_PUBLIC, "");
@@ -253,12 +256,13 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 				content = getBinaryFileContent(uri);
 				if (content == "\0")
 				{
+					//if it isn't a folder then return 404
 					content = getBinaryFileContent(PATH_404);
 					string header = make404ResponseHeader(content.length());
 					client.Send(header.c_str(), header.length(), 0);
 					client.Send(content.c_str(), content.length(), 0);
 				}
-				else //if it isn't a folder then return 404
+				else 
 				{
 					if (cached != "" && !modifiedFile(uri, cached))
 					{
@@ -267,7 +271,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 					}
 					else
 					{
-						string header = makeOKResponseHeader(content.length(), HTML_MIME, uri);
+						string header = makeOKResponseHeader(content.length(), HTML_MIME, uri, cacheControl);
 						client.Send(header.c_str(), header.length(), 0);
 						client.Send(content.c_str(), content.length(), 0);
 					}
@@ -277,13 +281,12 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			{
 				if (cached != "" && !modifiedFile(uri, cached))
 				{
-					cout << cached << '\n';
 					string header = make304ResponseHeader(uri);
 					client.Send(header.c_str(), header.length(), 0);
 				}
 				else
 				{
-					string header = makeOKResponseHeader(content.length(), rtype, uri);
+					string header = makeOKResponseHeader(content.length(), rtype, uri, cacheControl);
 					client.Send(header.c_str(), header.length(), 0);
 					client.Send(content.c_str(), content.length(), 0);
 				}

@@ -17,25 +17,19 @@ tm getFileModifiedDate(std::filesystem::path path)
 	localtime_s(&tmDate, &modifiedDate);
 	return tmDate;
 }
-string makeOKResponseHeader(int length, string type, std::filesystem::path path, bool nowTime)
+string makeOKResponseHeader(int length, string type, std::filesystem::path path, int cacheControl)
 {
 	string result;
 	char temp[50];
 	result = "HTTP/1.1 200 OK\r\nDate: ";
 	tm modifiedTime;
-	if (nowTime == 0)
-	{
-		modifiedTime = getFileModifiedDate(path);
-	}
-	else
-	{
-		time_t now;
-		time(&now);
-		localtime_s(&modifiedTime, &now);
-	}
+	modifiedTime = getFileModifiedDate(path);
 	strftime(temp, 50, TIME_STAMP, &modifiedTime);
+	string cacheControlHeader = "";
+	if (cacheControl == 1) cacheControlHeader = "Cache-Control: no-cache\r\n";
+	else if (cacheControl == 2) cacheControlHeader = "Cache-Control: no-store\r\n";
 	result = result + makeDate() + "\r\nServer: " + SERVER_INFO + "\r\nLast-Modified: " + temp + "\r\nContent-Length: " + to_string(length) + "\r\nExpires: " + makeDate(TWOWEEK) +
-		"\r\nContent-Type: "+ type +"; charset=utf-8\r\nConnection: Keep-Alive\r\n\r\n";
+		"\r\nContent-Type: "+ type +"; charset=utf-8\r\nConnection: Keep-Alive\r\n" + cacheControlHeader + "\r\n";
 	return result;
 }
 string make303ResponseHeader(string dest, string cookie) {
@@ -50,7 +44,7 @@ string makeChunkedOKResponseHeader(string type, std::filesystem::path path)
 	tm modifiedTime = getFileModifiedDate(path);
 	strftime(temp, 50, TIME_STAMP, &modifiedTime);
 	result = result + makeDate() + "\r\nServer: " + SERVER_INFO + "\r\nLast-Modified: " + temp + "\r\nTransfer-Encoding: chunked\r\nContent-Disposition: attachment" +
-		"\r\nContent-Type: " + type + "\r\nConnection: Keep-Alive\r\n\r\n";
+		"\r\nContent-Type: " + type + "\r\nConnection: Keep-Alive\r\nCache-Control: no-cache\r\n\r\n";
 	return result;
 }
 string makeDate(int secFromNow)
@@ -98,7 +92,7 @@ string make304ResponseHeader(std::filesystem::path path)
 	tm modifiedTime = getFileModifiedDate(path);
 	strftime(temp, 50, TIME_STAMP, &modifiedTime);
 	result = result + makeDate() + "\r\nServer: " + SERVER_INFO + "\r\nLast-Modified: " + temp +
-		"\r\nConnection: Keep-Alive\r\n\r\n";
+		"\r\nConnection: Keep-Alive\r\nCache-Control: no-cache\r\n\r\n";
 	return result;
 }
 vector<string> querySplitter(string query)
@@ -172,7 +166,7 @@ string make404ResponseHeader(int length)
 	tm modifiedTime = getFileModifiedDate(PATH_404);
 	strftime(temp, 50, TIME_STAMP, &modifiedTime);
 	result = result + makeDate() + "\r\nServer: " + SERVER_INFO + "\r\nLast-Modified: " + temp + "\r\nContent-Length: " + to_string(length) +"\r\nExpires: " + 
-		makeDate(TWOWEEK) + "\r\nContent-Type: text/html; charset=utf-8" + "\r\nConnection: Keep-Alive\r\n\r\n";
+		makeDate(TWOWEEK) + "\r\nContent-Type: text/html; charset=utf-8" + "\r\nConnection: Keep-Alive\r\nCache-Control: no-cache\r\n\r\n";
 	return result;
 }
 string getBinaryFileContent(string path)

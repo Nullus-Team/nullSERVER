@@ -28,7 +28,7 @@
 #define ONEDAY_SEC 86400
 using namespace std;
 using namespace std::chrono_literals;
-string makeOKResponseHeader(int length, string type, std::filesystem::path path, bool nowTime = 0);
+string makeOKResponseHeader(int length, string type, std::filesystem::path path, int noCache = 0);
 string getBinaryFileContent(string path);
 string uriCutter(vector<char> buffer);
 string getMIMEType(string uri);

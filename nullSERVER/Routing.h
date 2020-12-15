@@ -5,6 +5,9 @@
 #define HTML_MIME "text/html"
 #define COOKIE_HEADER "Cookie: "
 #define IF_MODIFIED_HEADER "If-Modified-Since: "
+#define NO_CACHE 1
+#define NO_STORE 2
+#define DEFAULT_CACHE 0
 DWORD WINAPI accessProcessing(LPVOID lpParam);
 void uriDecor(string& uri);
 void addFiles(string& content);
