@@ -3,8 +3,11 @@
 #include "NullServer.h"
 #include "MessagesProcessing.h"
 #include "Routing.h"
+#include "resource.h"
 void _tmain()
 {
+	wstring str(L"nullSERVER v0.1.2b");
+	SetConsoleTitle(str.c_str());
 	if (!AfxWinInit(::GetModuleHandle(NULL), NULL, ::GetCommandLine(), 0))
 	{
 		_tprintf(_T("Fatal Error: MFC initialization failed\n"));

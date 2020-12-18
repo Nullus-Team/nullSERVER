@@ -3,7 +3,7 @@
 // Used by NullServer.rc
 
 #define IDS_APP_TITLE			103
-
+#define MAINICON	101
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

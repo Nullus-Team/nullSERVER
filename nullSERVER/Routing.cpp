@@ -240,7 +240,7 @@ DWORD WINAPI accessProcessing(LPVOID lpParam)
 			}
 			if (uri == INFO_PATH)
 			{
-				cacheControl = NO_CACHE;
+				cacheControl = NO_STORE;
 				if (!cookieHashCheck(cookieSplitter(getHeaderValue(buffer, COOKIE_HEADER))))
 				{
 					string header = make303ResponseHeader(LOGIN_PATH_PUBLIC, "");
